@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 ## Start
 
-Open a todolist with one entry per phase before launching anything.
+Track one checklist entry per phase in `<appDataDir>/brain/<conversation-id>/task.md` before launching anything.
 
 1. Frame
 2. Fan out
@@ -19,14 +19,14 @@ Open a todolist with one entry per phase before launching anything.
 
 1. State the done predicate and the artifact or report the swarm must return.
 2. Choose the shape. Partition into slices, race N workers on identical briefs, or mix both. For a race or mixed shape, declare `first pass`, `rank all`, or `best-of` before spawning.
-3. Pick the worker model from the `swarm workers` line in `~/.gemini/config/rules/pstack-models.md`. If the rule or that line is missing, use `gemini-4-argon-high` (`Model: "pro"` in `invoke_subagent`). For `auto` or `inherit-parent`, use `Model: "inherit"` so the workers run on the parent model. If a model invocation rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from `agy models`. For a model race, name each arm's model up front. Pick each subagent's reasoning level and tier for the job, per the Subagents section of the **poteto-mode** skill.
-4. Give each worker its own writable output when it writes. When workers verify or measure commits, each brief names the exact SHAs. A measurement brief also names the method (sample count, what one sample is, order). The worker records both in its result.
+3. Pick the worker model from the `swarm workers` line in `~/.gemini/config/rules/pstack-models.md` after checking `swarm(action: "models", all: true)`. If the rule or that line is missing, use `gemini-4-argon-high`. Never select or fall back to `gpt-oss-*`. For `auto` or `inherit-parent`, omit `model` in `swarm` (or pass `Model: "inherit"` in `invoke_subagent`) so the workers run on the parent model. If `swarm` rejects a slug, use `gemini-4-argon-high` and say so. If the configured family has `0%` quota, apply poteto-mode's quota substitution (`claude-*` -> `gemini-4-carbon-high` / `gemini-4-argon-high`, or `gemini-*` -> `claude-sonnet-5-5-high`) and say so. For a model race, name each arm's exact slug up front (for example `claude-opus-5-5-high`, `gemini-4-carbon-high`, `gemini-4-argon-high`, `claude-sonnet-5-5-high`, `gemini-3.8-flash-high` / `gemini-4-hydrogen-high`). Pick each worker's reasoning level for the job, per the Subagents section of the **poteto-mode** skill.
+4. Give each worker its own writable output when it writes (`workspace: "share"` or `"branch"`). When workers verify or measure commits, each brief names the exact SHAs. A measurement brief also names the method (sample count, what one sample is, order). The worker records both in its result.
 
 ## Phase B: Fan out
 
-Spawn all N workers in one `invoke_subagent` call with `TypeName: "self"` (or `"poteto-agent"`), `Workspace: "branch"` (or `"share"` for shared-repo worktree isolation), and the step 3 model (`Model: "inherit"` for `auto` or `inherit-parent`). Use `Workspace: "inherit"` only when the worker is read-only or needs direct access to unbranched local workspace state.
+Launch all N workers concurrently using Antigravity's native `swarm` tool (`swarm(action: "add", name: "worker", model: "<slug>", workspace: "share", tasks: [...], brief: ...)` for sharded homogeneous slices, or parallel `swarm(action: "add", name: "<arm>", model: "<slug>", workspace: "share", brief: ...)` calls for per-arm models; or N parallel `invoke_subagent` calls in the same assistant turn with `TypeName: "poteto-agent"` or `"self"` when `Model: "inherit" | "pro" | "flash"` suffices). Use `workspace: "inherit"` only when the worker is strictly read-only or must inspect unbranched local state.
 
-When a worker must start from a non-default pushed branch, instruct the worker to `git fetch origin <branch> && git checkout <branch>` inside its isolated workspace (`Workspace: "branch"` or `"share"`).
+When a worker must start from a non-default pushed branch, instruct the worker to `git fetch origin <branch> && git checkout <branch>` inside its isolated workspace (`workspace: "share"` or `"branch"`).
 
 Every brief stands alone. Include the goal, scope, exact slice or race arm, how to verify, and what to report. Reports use `PASS`, `ISSUES`, or `BLOCKED` with evidence. A worker that can prove a defect reports `ISSUES` and lists every issue it can prove, not only the first.
 
@@ -34,7 +34,7 @@ If a worker drops out, proceed with N-1 and note it.
 
 ## Phase C: Aggregate
 
-Read the terminal results. Drop a result that does not record the SHAs and method its brief names, and respawn that worker once. After a second miss, record a gap. A gap does not count as a pass. For coverage, every required slice needs a result. For a race, apply the selection rule declared up front. Use first pass, rank all, or best-of. Do not paste raw worker dumps.
+Read the terminal results. Drop a result that does not record the SHAs and method its brief names, and respawn that worker once. After a second miss, record a gap. A gap does not count as a pass. For coverage, every required slice needs a result. For a race, apply the selection rule declared up front. Use first pass, rank all, or best-of. Do not paste raw worker dumps. Once all worker results and any commits/artifacts you need are landed or copied out, clean up `swarm` workers with `swarm(action: "kill", name: ...)`.
 
 ## Phase D: Report
 

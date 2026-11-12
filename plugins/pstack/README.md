@@ -8,7 +8,7 @@ there's a growing sense that ai writes too much slop code. i agree. i don't want
 
 **pstack gives you fearless parallelism.** when you can go deep on one agent and trust it to write good, verifiable code, you can truly parallelize with confidence. start multiple agents up with `poteto-mode` and trust that they'll apply rigorous engineering principles to their work.
 
-**antigravity gives you the best of all worlds.** every frontier model has its strengths and weaknesses. use any model with pstack. many skills use multi-model workflows across Gemini 4 Argon and Claude Opus 5.5 to take advantage of each model's unique strengths.
+**antigravity gives you the best of all worlds.** every frontier model has its strengths and weaknesses. use any model with pstack. many skills use multi-model workflows across Gemini 4 Carbon, Gemini 4 Argon, Hydrogen / Gemini Flash, Claude Opus 5.5, and Claude Sonnet 5.5 (`gpt-oss-*` excluded) to take advantage of each model's unique strengths.
 
 fork it. improve it. make it yours. PRs are welcome!
 
@@ -25,7 +25,7 @@ agy plugin validate /Users/jasonholt/repos/pstack-antigravity/plugins/pstack --s
 agy plugin install /Users/jasonholt/repos/pstack-antigravity/plugins/pstack
 ```
 
-see the [antigravity runtime and model guide](./docs/guide/00-antigravity.md) for how native subagents (`invoke_subagent`), model selection (`gemini-4-argon-high`, `claude-opus-5-5-high`), worktree isolation (`Workspace: "branch" | "share"`), and timers (`schedule`) work.
+see the [antigravity runtime and model guide](./docs/guide/00-antigravity.md) for how native `swarm` and `invoke_subagent`, 5-tier model selection (`gemini-4-carbon-high`, `gemini-4-argon-high`, `gemini-3.8-flash-high` / `gemini-4-hydrogen-high`, `claude-opus-5-5-high`, `claude-sonnet-5-5-high`), live quota fallback, worktree isolation (`workspace: "branch" | "share"`), and timers (`schedule`) work.
 
 ## get started
 
@@ -36,7 +36,7 @@ two steps:
 
 new here? the [pstack guide](./docs/guide/README.md) walks you through a first real task, from setup and prompting through verification and overnight runs. stuck, or unsure which skill fits? ask [`/poteto-help`](./skills/poteto-help/SKILL.md).
 
-that's it. the other skills are situational, and the mode skill uses them for you as needed. out of the box the mode splits work by model strength: code delegates (feature, refactoring, bug fix, perf, hillclimb) go to gemini-4-argon-high, while the hardest changes, prose, and judgment go to claude-opus-5-5-high. the default panel is claude-opus-5-5-high / gemini-4-argon-high. [`/setup-pstack`](./skills/setup-pstack/SKILL.md) changes any of it.
+that's it. the other skills are situational, and the mode skill uses them for you as needed. out of the box the mode splits work by model strength: feature, refactoring, and swarm delegates go to gemini-4-argon-high, deep debugging, perf, and hillclimb go to gemini-4-carbon-high, fast exploration goes to gemini-3.8-flash-high (`gemini-4-hydrogen-high` when listed), and the hardest changes, prose, and judgment go to claude-opus-5-5-high. multi-model panels span claude-opus-5-5-high, gemini-4-carbon-high, claude-sonnet-5-5-high, and gemini-4-argon-high (`gpt-oss-*` is excluded). [`/setup-pstack`](./skills/setup-pstack/SKILL.md) changes any of it.
 
 ## usage
 
@@ -80,7 +80,7 @@ morning.
 | [autonomous run](./skills/poteto-mode/playbooks/autonomous-run.md) | drive a long task to completion without stopping. |
 | [orchestrate](./skills/poteto-mode/playbooks/orchestrate.md) | a standing project handed to one coordinator chat: multi-day, many stacked prs, fleets of subagents. |
 | [autopilot-full](./skills/poteto-mode/playbooks/autopilot-full.md) | run independent prs to merged with one owner per pr. a swarm verifies each code-ready head, and every later change to the patch gets a fresh check. |
-| [autopilot-stack](./skills/poteto-mode/playbooks/autopilot-stack.md) | build and verify one linear base-branch stack for the operator to review and land. |
+| [autopilot-stack](./skills/poteto-mode/playbooks/autopilot-stack.md) | autopilot-full without the merge. build and verify prs for the operator to review and land, stacking a pr only on a pr it builds on. |
 | [session pickup](./skills/poteto-mode/playbooks/session-pickup.md) | resume or take over a prior agent's in-flight work. |
 | [pause safely](./skills/poteto-mode/playbooks/pause-safely.md) | suspend in-flight work cleanly so it can be resumed later. |
 | [multi-phase plan](./skills/poteto-mode/playbooks/multi-phase-plan.md) | work that spans phases or stacked PRs. |
@@ -128,12 +128,12 @@ once you invoke [`/poteto-mode`](./skills/poteto-mode/SKILL.md) in a session, it
 | [`/why`](./skills/why/SKILL.md) | you want to know why something was built this way. discovers available MCPs at run time and queries each evidence category in parallel (source control, issue tracker, long-form docs, real-time chat, infra observability, error tracking, analytics warehouse). |
 | [`/recall`](./skills/recall/SKILL.md) | you're starting or resuming work and want your recent context on a topic rebuilt from your own chat history and the shared record, handed back as a tight current-state brief. |
 | [`/ketchup`](./skills/ketchup/SKILL.md) | you want what changed in this chat since your last message, in plain words and small visuals, with every item waiting on you listed and decidable from the reply alone, even when that makes the reply long. |
-| [`/ketchup-video`](./skills/ketchup-video/SKILL.md) | you want the `/ketchup` catch-up as a short silent video of slides, with the calls waiting on you as text under it. |
+| [`/ketchup-video`](./skills/ketchup-video/SKILL.md) | you want the `/ketchup` catch-up as a short subtitled video of slides, with the calls waiting on you as text under it. |
 | [`/blast-radius`](./skills/blast-radius/SKILL.md) | you have a small-looking change and want to know what else it could break, with the one fact it's safe because of proven by running code, not asserted. |
 | [`/architect`](./skills/architect/SKILL.md) | you're about to write code that crosses a function boundary and want the caller's usage, types, and module shape settled first. |
 | [`/arena`](./skills/arena/SKILL.md) | you want N parallel attempts at the same thing, then to grab the best parts of each. |
 | [`/swarm`](./skills/swarm/SKILL.md) | you want N parallel workers across different slices or races, then one aggregated report. |
-| [`/interrogate`](./skills/interrogate/SKILL.md) | you have a diff and want different models to try to break it, including a strict code-quality lens. |
+| [`/interrogate`](./skills/interrogate/SKILL.md) | you have a diff and want different models to try to break it, keeping only findings a run proves. |
 | [`/automate-me`](./skills/automate-me/SKILL.md) | you want your own `-mode` skill, drafted from how you've actually worked. |
 | [`/deslop`](./skills/deslop/SKILL.md) | remove AI-generated code slop from the branch diff before commit. |
 | [`/make-bot-ui`](./skills/make-bot-ui/SKILL.md) | you want a page or dashboard whose buttons trigger an Antigravity workflow or sidecar automation, including exposing it on Tailscale. |
@@ -151,7 +151,7 @@ once you invoke [`/poteto-mode`](./skills/poteto-mode/SKILL.md) in a session, it
 | [`/maintain-verification-skill`](./skills/maintain-verification-skill/SKILL.md) | your verify skill's feature map has drifted from the app. source wave + one live pass, at most one PR of proven corrections. |
 | [`/create-formal-verification-skill`](./skills/create-formal-verification-skill/SKILL.md) | tests can't reach the case that breaks a race, retry, state machine, parser, or unsafe code. verifies one property with the tool that fits and generates a project-local skill to recheck it on every change. |
 | [`/maintain-formal-verification-skill`](./skills/maintain-formal-verification-skill/SKILL.md) | code your formal verification covers has changed since it was last checked. updates the model, harness, or properties to match the code, reruns, and says whether each failure is drift in the verification or a bug in the code. |
-| [`/statechart`](./skills/statechart/SKILL.md) | someone who owns the behavior needs to see it, not read a spec. draws what the user sees as a mermaid statechart generated from a tla+ model, marks each state works, still wrong, or fixed by your open pr, and draws each bug tlc finds as a numbered path. also turns an agreed chart into a tla+ skeleton, or audits the code against an existing spec. |
+| [`/statechart`](./skills/statechart/SKILL.md) | someone who owns the behavior needs to see it, not read a spec. checks a tla+ model, draws what the user sees as a mermaid statechart, marks each state that breaks a rule, and gives the shortest path to each one. |
 | [`/unslop`](./skills/unslop/SKILL.md) | you're cleaning up writing. removes AI tells. |
 | [`/bro`](./skills/bro/SKILL.md) | you want the last message restated in plain human language, no jargon. |
 | [`/technical-writing`](./skills/technical-writing/SKILL.md) | layered doc standard (Diátaxis + Google developer style + STE + Global English) for docs, RFCs, readmes, PR descriptions, commit messages. |
@@ -211,7 +211,7 @@ help:              /poteto-help which skill should i use to review this branch?
 
 [`/poteto-mode`](./skills/poteto-mode/SKILL.md) runs in the chat that receives it. that chat owns the playbook, the todo list, and every subagent spawn.
 
-pstack also ships [`TypeName: "poteto-agent"`](./agents/poteto-agent.md) as the subagent for delegates spawned via `invoke_subagent` during a run. it reads `poteto-mode` in full, including its inline principles index, before doing any work. substituting `self` or `research` without that read drifts. do not spawn `poteto-agent` to run the playbook itself.
+pstack also ships [`TypeName: "poteto-agent"`](./agents/poteto-agent.md) (configured with full write, command, task, subagent, `swarm`, and MCP grants) for delegates spawned via `invoke_subagent` during a run, alongside native `swarm` workers when pinning exact cross-family model slugs. each delegate reads `poteto-mode` in full, including its inline principles index, before doing any work. substituting `self` or `research` without that read drifts. do not spawn `poteto-agent` to run the playbook itself.
 
 [`/poteto-mode`](./skills/poteto-mode/SKILL.md) and [`TypeName: "poteto-agent"`](./agents/poteto-agent.md) route through the same skill.
 
@@ -256,7 +256,7 @@ twenty-four short skills, one principle each. `poteto-mode` indexes them inline 
 ## bundled & built-in helpers
 
 - `/deslop` ([skills/deslop/SKILL.md](./skills/deslop/SKILL.md)) is bundled directly in this Antigravity package.
-- Browser/Electron/web UI verification uses Antigravity's native browser/preview tools (`chrome_*` or `preview_*`) and project-local `.agents/skills/verify-<app>/` skills. CLI and TUI verification uses `run_command` and `manage_task`.
+- Browser/Electron/web UI verification uses Antigravity's built-in `browser` subagent (`TypeName: "browser"`), `chrome-devtools` / `browse` MCP, `chrome_*` / `preview_*`, and project-local `.agents/skills/verify-<app>/` skills. Native desktop apps use `cua-driver`; CLI and TUI verification uses `run_command` and `manage_task`.
 - Timers and loops use Antigravity's native `schedule` tool and `/automation` sidecars. Inside `poteto-mode`, PR-status requests go to the [babysit playbook](./skills/poteto-mode/playbooks/babysit.md).
 
 ## why are there no planning skills?

@@ -69,10 +69,9 @@ elif raw=$(gh pr list --author "@me" --state all --limit 1000 \
 fi
 [ -s "$prs" ] || echo "[]" > "$prs"
 
-# Transcripts dirs: Antigravity conversations/brain logs (plus legacy transcripts if present).
-slug=$(printf '%s' "$main_wt" | sed 's#^/##; s#/#-#g')
+# Transcripts dirs: Antigravity brain logs and CLI conversations.
 transcript_dirs=()
-for d in "$HOME/.gemini/antigravity-cli/conversations" "$HOME/.gemini/antigravity/conversations" "$HOME/.t3/userdata/providers/antigravity" "$HOME/.cursor/projects/$slug/agent-transcripts"; do
+for d in "$HOME/.gemini/antigravity/brain" "$HOME/.gemini/antigravity-cli/conversations" "$HOME/.gemini/antigravity/conversations" "$HOME/.t3/userdata/providers/antigravity"; do
 	[ -d "$d" ] && transcript_dirs+=("$d")
 done
 now=$(date +%s)

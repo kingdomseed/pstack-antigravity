@@ -22,21 +22,21 @@ Start with `transcript.jsonl`. Read the `USER_INPUT` steps to verify the file ma
 
 ## 2. Spawn three reviewers in parallel
 
-One `invoke_subagent` call (or parallel CLI / delegate invocations for cross-family models) with three reviewers, `TypeName: "self"` (never `TypeName: "research"`, because reviewers need MCP access via `call_mcp_tool` to look up tickets, chat threads, and observability traces the transcript references, and `research` disables MCP tools).
+Check `swarm(action: "models", all: true)` first, then launch all three reviewers in parallel in the same assistant turn (`swarm(action: "add", model: "<slug>", workspace: "inherit", ...)` for exact cross-family slugs, or `invoke_subagent` with `TypeName: "self"`, never `TypeName: "research"` because reviewers need MCP access via `call_mcp_tool` to look up tickets, chat threads, and observability traces the transcript references, and `research` disables MCP tools).
 
-Each reviewer and the synthesizer name a role line in the `~/.gemini/config/rules/pstack-models.md` rule and a default. Set the model to that line's value, or to the default if the rule or the line is missing. Use `Model: "inherit"` when the value is `auto` or `inherit-parent`. If a model invocation rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from `agy models`. Pick each subagent's reasoning level and tier for the job, per the Subagents section of the **poteto-mode** skill.
+Each reviewer and the synthesizer name a role line in `~/.gemini/config/rules/pstack-models.md` and a default. Never select or fall back to `gpt-oss-*`. Use `Model: "inherit"` (or omit `model` in `swarm`) when the value is `auto` or `inherit-parent`. If `claude-*` quota is `0%`, apply poteto-mode's quota substitution (`claude-opus-5-5-*` -> `gemini-4-carbon-high`) and note it. Pick each reviewer's reasoning level for the job, per the Subagents section of the **poteto-mode** skill.
 
 | Lens | Role line | Default model | Prompt template |
 |---|---|---|---|
 | Judgment | `reflect judgment, divergent, synthesizer` | `claude-opus-5-5-high` | `references/judgment-reviewer.md` |
-| Tooling | `reflect tooling` | `gemini-4-argon-high` | `references/tooling-reviewer.md` |
+| Tooling | `reflect tooling` | `gemini-3.8-flash-high` (`gemini-4-hydrogen-high` when entitled) | `references/tooling-reviewer.md` |
 | Divergent | `reflect judgment, divergent, synthesizer` | `claude-opus-5-5-high` | `references/divergent-reviewer.md` |
 
 Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in their response body.
 
 ## 3. Synthesize
 
-One subagent call (`TypeName: "self"`, model from the `reflect judgment, divergent, synthesizer` line, default `claude-opus-5-5-high`). It spot-verifies citations through MCP, and `TypeName: "self"` preserves MCP access. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.
+Spawn one synthesizer (`swarm(action: "add", model: "<slug>", workspace: "inherit", ...)` or `invoke_subagent` with `TypeName: "self"`, model from the `reflect judgment, divergent, synthesizer` line, default `claude-opus-5-5-high`). It spot-verifies citations through MCP. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list. Clean up any `swarm` workers with `swarm(action: "kill", name: ...)` once synthesis completes.
 
 ## 4. Structural enforcement check
 
@@ -48,7 +48,7 @@ Present the synthesizer's full Accepted / Rejected / Backlog output and wait for
 
 File each Backlog item to your team's devex or backlog tracker without waiting. Only the Accepted list waits for approval.
 
-Never edit an installed plugin cache directly without showing the destination first: `.agents/skills/<skill>/` or `~/.gemini/config/skills/<skill>/`. After approval, copy the skill folder there and edit the copy. Never open a PR or push without approval.
+Never edit an installed plugin cache directly without showing the destination first: `.agents/skills/<skill>/` or `~/.gemini/config/skills/<skill>/` (or the source plugin repository when explicitly maintaining pstack). After approval, copy the skill folder to `.agents/skills/<skill>/` or `~/.gemini/config/skills/<skill>/` and edit the copy. Never open a PR or push without approval.
 
 Follow each approved row's Routing exactly:
 
@@ -57,7 +57,7 @@ Follow each approved row's Routing exactly:
 - `tune description: <skill path>` (the skill exists but didn't trigger when it should have): refine its `description` frontmatter scalar for trigger accuracy.
 - `new skill: <kebab-name>`: author `<kebab-name>/SKILL.md` with valid frontmatter (`name`, `description`, `disable-model-invocation: true` when appropriate) and apply `/unslop`.
 
-Run `agy plugin validate` on the plugin or verify the touched `SKILL.md` frontmatter before declaring done.
+Run `agy plugin validate --strict` on the plugin or verify the touched `SKILL.md` frontmatter before declaring done.
 
 ## 6. Summarize for the user
 

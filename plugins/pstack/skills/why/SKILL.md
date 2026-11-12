@@ -8,9 +8,9 @@ disable-model-invocation: true
 
 Investigate the motivation and intent behind code. The companion `how` skill answers what the code does and how it works. `why` answers what forces led to its shape.
 
-Each spawn below names a role line in the `~/.gemini/config/rules/pstack-models.md` rule and a default. Set the model to that line's value, or to the default if the rule or the line is missing. Use `Model: "inherit"` when the value is `auto` or `inherit-parent`. If a model invocation rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from `agy models`. Pick each subagent's reasoning level and tier for the job, per the Subagents section of the **poteto-mode** skill.
+Each spawn below names a role line in `~/.gemini/config/rules/pstack-models.md` and a default. Set the model to that line's value, or to the default if the rule or the line is missing. Never select or fall back to `gpt-oss-*`. Use `Model: "inherit"` when the value is `auto` or `inherit-parent`. For exact cross-family slugs (such as `claude-opus-5-5-high` when the parent runs on Gemini), check `swarm(action: "models", all: true)` first, run via `swarm(action: "add", model: "<slug>", workspace: "inherit", ...)` (substituting `gemini-4-carbon-high` and noting it if `claude-*` quota is `0%`), and call `swarm(action: "kill")` after reading the result. Pick each subagent's reasoning level for the job, per the Subagents section of the **poteto-mode** skill.
 
-Every spawn uses `invoke_subagent` with `TypeName: "self"`. **Do not use `TypeName: "research"` here.** `research` has `enable_mcp_tools: false`, which disables the MCP-backed investigators and the synthesizer's citation spot-checks. Investigators still shouldn't write anything.
+Every `invoke_subagent` spawn here uses `TypeName: "self"` (never `TypeName: "research"`). `research` disables MCP tools, which breaks MCP-backed investigators and the synthesizer's citation spot-checks. Investigators and the synthesizer remain strictly read-only by instruction.
 
 ## Operating Posture
 
@@ -32,7 +32,7 @@ Before spawning investigators, build the seed context inline: file paths and lin
 
 ### Discovery
 
-Before spawning investigators, list the available MCPs from the Antigravity environment. Inspect the `<mcp_servers>` block in your system prompt and the tool schemas under `<appDataDir>/brain/<conversation-id>/mcp/<serverName>/`.
+Before spawning investigators, list the available MCPs from the Antigravity environment. Inspect the `<mcp_servers>` block in your system prompt and the tool schemas under `<appDataDir>/mcp/<serverName>/`.
 
 Map each available MCP to one evidence category:
 
@@ -46,7 +46,7 @@ Map each available MCP to one evidence category:
 
 Source control is always available through git and `gh`. For the other six, classify using the MCP name, server instructions, tool names, and resource descriptors. If an MCP could fit more than one category, choose the one matching its primary evidence. Record ambiguous cases in the coverage map.
 
-Spawn one investigator per category that has a matching MCP, all in a single `invoke_subagent` call so they run concurrently, each owning exactly one tool or MCP. Don't ask one agent to cover multiple MCPs. Model: the `why investigators` line, default `gemini-4-argon-high` (`Model: "pro"`).
+Spawn one investigator per category that has a matching MCP, emitting all `invoke_subagent` calls in parallel in the same assistant turn so they run concurrently, each owning exactly one tool or MCP. Don't ask one agent to cover multiple MCPs. Model: the `why investigators` line, default Hydrogen / Gemini Flash (`gemini-4-hydrogen-high` when entitled, otherwise `gemini-3.8-flash-high`, `Model: "flash"`).
 
 ### Investigator brief
 

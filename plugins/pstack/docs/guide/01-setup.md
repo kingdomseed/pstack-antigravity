@@ -26,9 +26,9 @@ Run:
 /setup-pstack
 ```
 
-[`/setup-pstack`](../../skills/setup-pstack/SKILL.md) detects the models you have access to via `agy models`, asks for a reasoning budget, shows you each role (code delegates, judgment, the review panels), and asks what you want. Answer the questions. It writes `~/.gemini/config/rules/pstack-models.md` (and `~/.gemini/pstack-models.md`), a small always-on rule every pstack skill reads.
+[`/setup-pstack`](../../skills/setup-pstack/SKILL.md) detects the models and live quotas you have access to via `swarm(action: "models", all: true)` and `agy models` (across Gemini 4 Carbon, Gemini 4 Argon, Hydrogen / Gemini Flash, Claude Opus 5.5, and Claude Sonnet 5.5, while excluding `gpt-oss-*`), asks for a reasoning budget, shows you each role (code delegates, deep debugging/perf, fast exploration, judgment, and the review panels), and asks what you want. Answer the questions. It writes `~/.gemini/config/rules/pstack-models.md` (and `~/.gemini/pstack-models.md`), a small always-on rule every pstack skill reads.
 
-The defaults use `gemini-4-argon-high` for code roles and `claude-opus-5-5-high` for judgment and prose, with both `claude-opus-5-5-high` and `gemini-4-argon-high` on multi-model panels. `unlimited` and `large` keep the `-high` model slugs and record `max` or `xhigh` effort for CLI runs. `small` lowers the slugs to `-medium` and spends fewer tokens.
+The defaults use `gemini-4-argon-high` for feature, refactoring, and swarm roles, `gemini-4-carbon-high` for bug-fix, perf, and hillclimb roles, `gemini-3.8-flash-high` (`gemini-4-hydrogen-high` when listed) for fast exploration, and `claude-opus-5-5-high` for judgment and prose, with `claude-opus-5-5-high`, `gemini-4-carbon-high`, and `claude-sonnet-5-5-high` across multi-model panels. `unlimited` and `large` keep the `-high` model slugs and record `max` or `xhigh` effort for CLI runs. `small` lowers the slugs to `-medium` and spends fewer tokens.
 
 To keep every role on your active session model, set the roles you want to `auto` or `inherit-parent`.
 

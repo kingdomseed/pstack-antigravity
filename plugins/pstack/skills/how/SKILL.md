@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
-Every spawn is an `invoke_subagent` call with `TypeName: "research"` (read-only). Explorers use the `how explorer` line in the `~/.gemini/config/rules/pstack-models.md` rule (default `gemini-4-argon-high`, or `Model: "pro"` / `"flash"` in `invoke_subagent`), and every explainer uses the `how explainer` line (default `claude-opus-5-5-high`, or `Model: "inherit"` when the parent runs on Opus). Set the model to that line's value, or to the default if the rule or the line is missing. Use `Model: "inherit"` when the value is `auto` or `inherit-parent`. If a model invocation rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from `agy models`. Pick each subagent's reasoning level and tier for the job, per the Subagents section of the **poteto-mode** skill.
+Explorers use the `how explorer` line in `~/.gemini/config/rules/pstack-models.md` (default Hydrogen / Gemini Flash: `gemini-4-hydrogen-high` when entitled, otherwise `gemini-3.8-flash-high`), and every explainer uses the `how explainer` line (default `claude-opus-5-5-high`). Never select or fall back to `gpt-oss-*`. Use read-only `invoke_subagent` calls with `TypeName: "research"` (`Model: "flash"` for Hydrogen / Flash explorers, `Model: "pro"` for Argon / Carbon, or `Model: "inherit"` when `auto`, `inherit-parent`, or matching the parent model), or `swarm(action: "add", model: "<slug>", workspace: "inherit", ...)` with read-only instructions when pinning an exact cross-family slug (checking `swarm(action: "models", all: true)` first and substituting `gemini-4-carbon-high` if `claude-*` quota is `0%`, then calling `swarm(action: "kill")` when done). Pick each subagent's reasoning level for the job, per the Subagents section of the **poteto-mode** skill.
 
 ## 1. Assess complexity
 
@@ -21,7 +21,7 @@ When in doubt, take the simple path.
 
 ## 2. Explore (complex only)
 
-Decompose the question into 2 to 4 angles, each a distinct slice of the subsystem. Spawn all explorers in a single `invoke_subagent` call, each with `references/explorer-prompt.md` and its angle filled in.
+Decompose the question into 2 to 4 angles, each a distinct slice of the subsystem. Spawn all explorers in parallel in the same assistant turn (one `invoke_subagent` call per explorer), each with `references/explorer-prompt.md` and its angle filled in.
 
 ## 3. Synthesize (complex only)
 
