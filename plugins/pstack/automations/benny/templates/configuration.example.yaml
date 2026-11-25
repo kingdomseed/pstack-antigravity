@@ -80,5 +80,5 @@ budgets:
 models:
   triage: "claude-opus-5-5-medium"
   reproduce: "claude-opus-5-5-medium"
-  code: "gemini-4-argon-high"
+  code: "gemini-4-neon-xhigh"
   media_review: "claude-opus-5-5-medium"

@@ -1,21 +1,21 @@
 # Antigravity runtime and model guide
 
-This package is a native Antigravity conversion of Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/pstack) (`0.15.36`, upstream commit `c742dd61706fbacc1b95f1a20b7b988cf096ce6c`). Every principle skill is unchanged. Host-specific primitives (plugin manifest, native `swarm` board, custom subagents with explicit tool and MCP grants, 5-tier model routing, rules, worktree isolation, timers, transcripts, and verification surfaces) use native Antigravity tools and paths directly.
+This package is a native Antigravity conversion of Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/pstack) (`0.15.48`, upstream commit `9e278fe4d41f5e6e0c93a9df4b0de5a1d9ef6d4a`). Every principle skill keeps its rule and test verbatim. Host-specific primitives (plugin manifest, native `swarm` board, custom subagents with explicit tool and MCP grants, 4-tier model routing, rules, worktree isolation, timers, transcripts, and verification surfaces) use native Antigravity tools and paths directly.
 
 ## Install and validate
 
-Validate and install the plugin from `/Users/jasonholt/repos/pstack-antigravity`:
+Validate and install the plugin from `/Users/jasonholt/repos/personal/pstack/pstack-antigravity`:
 
 ```sh
-/Users/jasonholt/.local/bin/agy plugin validate /Users/jasonholt/repos/pstack-antigravity/plugins/pstack --strict
-/Users/jasonholt/repos/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh
+/Users/jasonholt/.local/bin/agy plugin validate /Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack --strict
+/Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh
 /Users/jasonholt/.local/bin/agy plugin list
 ```
 
 Pass `--reset-models` to `install-antigravity.sh` when you want to overwrite existing `pstack-models.md` rules with the latest defaults:
 
 ```sh
-/Users/jasonholt/repos/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh --reset-models
+/Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh --reset-models
 ```
 
 `install-antigravity.sh`:
@@ -29,10 +29,10 @@ Antigravity provides two native multi-agent surfaces. Use the one that matches t
 
 ### 1. Native `swarm` (exact model slug pinning + live quota inspection)
 
-Use `swarm` whenever a role or panel requires pinning an exact model slug across families (`claude-opus-5-5-high`, `claude-sonnet-5-5-high`, `gemini-4-carbon-high`, `gemini-4-argon-high`, `gemini-4-hydrogen-high` / `gemini-3.8-flash-high`):
+Use `swarm` whenever a role or panel requires pinning an exact model slug across vendors (`claude-opus-5-5-high`, `gemini-4-neon-xhigh`, `gemini-4-neon-high`, `gemini-4-carbon-high`, `gemini-4-hydrogen-high` / `gemini-3.8-flash-high`):
 
-- `swarm(action: "models", all: true)` returns every accepted model slug plus live `quotas` (`remaining` percentage and `reset` timestamp) per model family. Call it once before multi-model fan-out (`/arena`, `/architect`, `/interrogate`, `/swarm`, `/why`, `/reflect`).
-- `swarm(action: "add", name: "<worker>", model: "<slug>", workspace: "share" | "branch" | "inherit", brief: "...")` spawns a worker pinned to `<slug>` (`tasks: [...]` or `n: <k>` spawns `<name>-1`..`<name>-<k>`). Workers start fresh and see only the public board, so paste full briefs and tell code-writing workers to read `poteto-mode/SKILL.md` first.
+- `swarm(action: "models", all: true)` returns every accepted model slug plus live `quotas` (`remaining` percentage and `reset` timestamp) per model family. Call it once before multi-model fan-out (`/arena`, `/interrogate`, `/swarm`).
+- `swarm(action: "add", name: "<worker>", model: "<slug>", workspace: "share" | "branch" | "inherit", brief: "...")` spawns a worker pinned to `<slug>` (`tasks: [...]` or `n: <k>` spawns `<name>-1`..`<name>-<k>`). Workers start fresh and see only the public board, so paste full briefs, open with `Read <path>/worker.md before anything else.`, and tell code-writing workers to read `poteto-mode/SKILL.md` first.
 - `swarm(action: "model", name: "<worker>", model: "<slug>")` switches a `waiting` worker on quota exhaustion without losing its conversation.
 - `swarm(action: "kill", name: "<worker>")` permanently ends a worker and deletes its `share` or `branch` workspace. Land or cherry-pick a worker's commits before killing it, then kill finished workers when the round closes.
 
@@ -40,10 +40,10 @@ Use `swarm` whenever a role or panel requires pinning an exact model slug across
 
 Use `invoke_subagent` (`Model: "inherit" | "pro" | "flash" | "flash_lite"`, `Workspace: "inherit" | "branch" | "share"`) when the worker's system prompt or specialist toolset matters and `Model` covers the target tier:
 
-- `TypeName: "poteto-agent"`: code-writing and helper delegates inside `/poteto-mode` playbooks. Configured in `agents/poteto-agent.md` with full write, command, task, subagent, `swarm`, and MCP grants (`inheritMcp: true`, `inheritCustomizations: true`). Reads `poteto-mode/SKILL.md` in full before any work.
+- `TypeName: "poteto-agent"`: code-writing and helper delegates inside `/poteto-mode` playbooks. Configured in `agents/poteto-agent.md` (`model: inherit`) with full write, command, task, subagent, `swarm`, and MCP grants (`inheritMcp: true`, `inheritCustomizations: true`). Reads `poteto-mode/SKILL.md` in full before any work.
 - `TypeName: "comment-sicko"`: comment-deletion and `MUST KILL` flagger used by `/no-comments`, configured with `edit_file`, `run_command`, and MCP inheritance.
 - `TypeName: "research"`: built-in read-only subagent for fast codebase exploration (`/how`). Note that `research` runs without MCP or network access.
-- `TypeName: "self"`: built-in subagent inheriting the parent agent's full configuration and MCP access. Use `TypeName: "self"` (with read-only prompt instructions) when a read-only investigator needs MCP tools (`/why`, `/reflect`).
+- `TypeName: "self"`: built-in subagent inheriting the parent agent's full configuration and MCP access. Use `TypeName: "self"` (with read-only prompt instructions) when a read-only investigator needs MCP tools (`/recall`).
 - `TypeName: "browser"`: built-in webview browser agent (`Model: "flash"` by default) for live web UI verification alongside `chrome-devtools` / `browse` MCP and `cua-driver`.
 - Parallelism and wakeup: launch parallel subagents via multiple `invoke_subagent` tool calls in the same assistant turn. Both `swarm` and `invoke_subagent` wake the parent turn reactively on completion; never poll in a loop.
 
@@ -57,28 +57,26 @@ agy --model claude-opus-5-5-high --effort high -p='<prompt>'
 
 In T3 Code ACP sessions, `delegate_task` also accepts exact cross-family slugs directly.
 
-## Antigravity 5-tier model catalog and `gpt-oss-*` exclusion
+## Antigravity 4-tier model catalog and exclusions
 
-Antigravity pstack routes work across five frontier model tiers:
+Antigravity pstack routes work across four allowed frontier model tiers across two vendors, capped at `xhigh`:
 
-1. **Gemini 4 Carbon** (`gemini-4-carbon-{low,medium,high}`): deepest Gemini reasoning tier for root-cause debugging, performance investigation, hillclimbing, and cross-family panels.
-2. **Gemini 4 Argon** (`gemini-4-argon-{low,medium,high}`): balanced daily workhorse for features, refactoring, and parallel swarm lanes (`Model: "pro"` in `invoke_subagent`).
-3. **Hydrogen / Gemini Flash** (`gemini-4-hydrogen-{low,medium,high}` when exposed in `swarm(action: "models", all: true)` / `agy models`, currently served as `gemini-3.8-flash-{low,medium,high}` / `Model: "flash"`): high-speed exploration, MCP archaeology, and transcript preflight.
-4. **Claude Opus 5.5** (`claude-opus-5-5-{low,medium,high}`): judgment, prose, synthesis, hardest tasks, and cross-family panels.
-5. **Claude Sonnet 5.5** (`claude-sonnet-5-5-{low,medium,high}`): fast Anthropic runner for 3-seat design and code arenas (`/arena`, `/architect`) and medium-budget Anthropic roles.
+1. **Claude Opus 5.5** (`claude-opus-5-5-{low,medium,high}`): judgment, cross-vendor panels, and adversarial review. Tops out at `high` in Antigravity.
+2. **Gemini 4 Neon** (`gemini-4-neon-{low,medium,high,xhigh}`): primary implementation, refactoring, judgment/prose (`gemini-4-neon-xhigh`), swarm lanes (`gemini-4-neon-high`), and Neon panel seats (`gemini-4-neon-xhigh`).
+3. **Gemini 4 Carbon** (`gemini-4-carbon-{low,medium,high}`): deep Gemini reasoning tier for root-cause debugging, performance investigation, hillclimbing, and cross-vendor panels. Tops out at `high` in Antigravity.
+4. **Gemini 4 Hydrogen / Flash** (`gemini-4-hydrogen-{low,medium,high,xhigh}`, fallback `gemini-3.8-flash-{low,medium,high}`): high-speed exploration and lightweight helper/eval-dispatch tasks (`Model: "flash"`).
 
-**Hard exclusion (`gpt-oss-*`):** Never detect, offer, configure, or fall back to `gpt-oss-*` (`gpt-oss-120b-medium`).
+**Hard exclusions:** Never detect, offer, configure, or fall back to `gemini-4-argon-*`, `claude-sonnet-5-5-*`, or `gpt-oss-*` (`gpt-oss-120b-medium`).
 
-**Live quota fallback:** Before spawning a `claude-*` worker, check `quotas` from `swarm(action: "models", all: true)`. When a family's remaining quota is `0%` (or a spawn returns `RESOURCE_EXHAUSTED`), substitute `gemini-4-carbon-high` for `claude-opus-5-5-*` and `gemini-4-argon-high` for `claude-sonnet-5-5-*` (or vice versa when Gemini quota is `0%`), and state the substitution in your reply.
+**Live quota fallback:** Before spawning a `claude-*` worker, check `quotas` from `swarm(action: "models", all: true)`. When a family's remaining quota is `0%` (or a spawn returns `RESOURCE_EXHAUSTED`), substitute `gemini-4-neon-xhigh` / `gemini-4-carbon-high` for `claude-opus-5-5-*` (or vice versa when `gemini-*` quota is `0%`), deduplicating repeated panel seats, and state the substitution in your reply.
 
 | Role group | Default model | Primary Antigravity runner |
 | --- | --- | --- |
-| Feature, refactoring, swarm lanes (`feature, refactoring`, `swarm workers`) | `gemini-4-argon-high` | `invoke_subagent` (`TypeName: "poteto-agent"`, `Model: "pro"`) or `swarm(action: "add", model: "gemini-4-argon-high", ...)` |
+| Feature, refactoring, judgment, prose (`feature, refactoring`, `judgment and prose`) | `gemini-4-neon-xhigh` | `swarm(action: "add", model: "gemini-4-neon-xhigh", ...)` or `invoke_subagent` (`TypeName: "poteto-agent"`, `Model: "pro"`) |
 | Deep debugging & perf (`bug-fix`, `perf-issue`, `hillclimb`) | `gemini-4-carbon-high` | `swarm(action: "add", model: "gemini-4-carbon-high", ...)` (or `invoke_subagent` `Model: "inherit"` when parent is Carbon) |
-| Judgment, prose, synthesis (`judgment and prose`, `hardest tasks`, `how explainer`, `why synthesizer`, `reflect judgment, divergent, synthesizer`) | `claude-opus-5-5-high` | `swarm(action: "add", model: "claude-opus-5-5-high", ...)` (or `Model: "inherit"` when parent is Opus; quota fallback `gemini-4-carbon-high`) |
-| Fast exploration & archaeology (`how explorer`, `why investigators`, `reflect tooling`) | `gemini-3.8-flash-high` (`gemini-4-hydrogen-high` when listed) | `invoke_subagent` (`Model: "flash"`) or `swarm(action: "add", model: "gemini-3.8-flash-high", ...)` |
-| Design & code panels (`arena runners`, `architect runners`) | `claude-opus-5-5-high, gemini-4-carbon-high, claude-sonnet-5-5-high` | `swarm(action: "add", ...)` per seat in isolated `workspace: "share"` |
-| Cross-judge & adversarial review (`arena cross-judge pool`, `interrogate reviewers`) | `claude-opus-5-5-high, gemini-4-carbon-high[, gemini-4-argon-high]` | `swarm(action: "add", ...)` on a family disjoint from the author/candidate |
+| Swarm lanes & mechanical verification (`swarm workers`) | `gemini-4-neon-high` | `swarm(action: "add", model: "gemini-4-neon-high", ...)` or `invoke_subagent` (`TypeName: "poteto-agent"`, `Model: "pro"`) |
+| Design & code panels (`arena runners`, `interrogate reviewers`) | `claude-opus-5-5-high, gemini-4-carbon-high, gemini-4-neon-xhigh` | `swarm(action: "add", ...)` per seat in isolated `workspace: "share"` |
+| Cross-judge (`arena cross-judge pool`) | `claude-opus-5-5-high, gemini-4-neon-xhigh, gemini-4-carbon-high` | `swarm(action: "add", ...)` on a vendor disjoint from the parent (`claude-*` vs `gemini-*`) |
 
 Run `/setup-pstack` to customize `~/.gemini/config/rules/pstack-models.md` and `~/.gemini/pstack-models.md`.
 

@@ -7,13 +7,13 @@ In this page you install the plugin, pick which models pstack uses, and run your
 From your local `pstack-antigravity` checkout, run:
 
 ```bash
-/Users/jasonholt/repos/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh
+/Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh
 ```
 
 Or install directly with the Antigravity CLI:
 
 ```bash
-agy plugin install /Users/jasonholt/repos/pstack-antigravity/plugins/pstack
+agy plugin install /Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack
 ```
 
 Antigravity installs the plugin into `~/.gemini/config/plugins/pstack` and registers its skills and custom subagents (`poteto-agent` and `comment-sicko`). See the [Antigravity runtime and model guide](./00-antigravity.md) for T3 Code and CLI details.
@@ -26,11 +26,13 @@ Run:
 /setup-pstack
 ```
 
-[`/setup-pstack`](../../skills/setup-pstack/SKILL.md) detects the models and live quotas you have access to via `swarm(action: "models", all: true)` and `agy models` (across Gemini 4 Carbon, Gemini 4 Argon, Hydrogen / Gemini Flash, Claude Opus 5.5, and Claude Sonnet 5.5, while excluding `gpt-oss-*`), asks for a reasoning budget, shows you each role (code delegates, deep debugging/perf, fast exploration, judgment, and the review panels), and asks what you want. Answer the questions. It writes `~/.gemini/config/rules/pstack-models.md` (and `~/.gemini/pstack-models.md`), a small always-on rule every pstack skill reads.
+[`/setup-pstack`](../../skills/setup-pstack/SKILL.md) detects the models and live quotas you have access to via `swarm(action: "models", all: true)` and `agy models` (across Claude Opus 5.5, Gemini 4 Neon, Gemini 4 Carbon, and Gemini 4 Hydrogen / Flash, while excluding `gemini-4-argon-*`, `claude-sonnet-5-5-*`, and `gpt-oss-*`), asks for a reasoning budget, shows you each role (code delegates, deep debugging/perf, judgment/prose, swarm workers, and the review panels), and asks what you want. Answer the questions. It writes `~/.gemini/config/rules/pstack-models.md` (and `~/.gemini/pstack-models.md`), a small always-on rule every pstack skill reads.
 
-The defaults use `gemini-4-argon-high` for feature, refactoring, and swarm roles, `gemini-4-carbon-high` for bug-fix, perf, and hillclimb roles, `gemini-3.8-flash-high` (`gemini-4-hydrogen-high` when listed) for fast exploration, and `claude-opus-5-5-high` for judgment and prose, with `claude-opus-5-5-high`, `gemini-4-carbon-high`, and `claude-sonnet-5-5-high` across multi-model panels. `unlimited` and `large` keep the `-high` model slugs and record `max` or `xhigh` effort for CLI runs. `small` lowers the slugs to `-medium` and spends fewer tokens.
+The defaults match the `large` budget and cap every role at `xhigh`: `gemini-4-neon-xhigh` for feature, refactoring, judgment, and prose, `gemini-4-carbon-high` for bug-fix, perf, and hillclimb, `gemini-4-neon-high` for swarm workers, and `claude-opus-5-5-high`, `gemini-4-carbon-high`, and `gemini-4-neon-xhigh` across multi-model panels. `medium` lowers each role one level and `small` lowers it two, and both spend fewer tokens.
 
-To keep every role on your active session model, set the roles you want to `auto` or `inherit-parent`.
+You only override what you care about. A role with no line in the rule keeps the skill's default. To restore a default, delete that role's line. A rerun of `/setup-pstack` keeps any role whose model differs from the default. When a default changes, a rule written before the change still pins the old default until you run `/setup-pstack` again. That run replaces the old defaults it recognizes, tells you which, and keeps your other choices. To drop a pin it does not recognize, delete that role's line or the file first.
+
+To keep every role on your active session model, set the roles you want to `auto` or `inherit-parent` (both mean: run on the parent chat model via `Model: "inherit"` or omit `model` in `swarm`). For a panel role the value is a list, and one worker runs per entry, so the list length sets the panel size.
 
 ## Optional: generate a verification skill
 
@@ -48,7 +50,7 @@ After setup, start a new chat. The model rule applies to new sessions.
 
 pstack spends extra tokens on subagents and review panels. That's the price of the rigor. To spend fewer:
 
-- Rerun `/setup-pstack` and pick a smaller reasoning budget or cheaper models. A strong model in the main chat with cheaper, faster models (`gemini-3.8-flash-high`) in the exploration roles is a good split.
+- Rerun `/setup-pstack` and pick a smaller reasoning budget (`medium` or `small`) or faster models (`gemini-4-hydrogen-high` / `gemini-3.8-flash-high`).
 - Set a role to `auto` or `inherit-parent` so it runs on the chat's own model (`Model: "inherit"`).
 - Shorten a panel list. Each entry runs one subagent.
 - Save `/poteto-mode` for work that needs rigor. A small, obvious edit doesn't.
@@ -61,7 +63,7 @@ Pick something real but small, and describe it the way you'd describe it to a co
 /poteto-mode add a --json flag to this command. text output stays byte-identical. verify both.
 ```
 
-Watch the todo list. Its first items are the matched playbook's steps copied in, the Feature playbook for this prompt. If `/poteto-mode` skips a step, the step stays in the list with `skip: <reason>`, so you can see what it chose not to do.
+Watch the todo list. Its first items are the matched playbook's steps copied in, the Feature playbook for this prompt.
 
 From here you can type normal follow-ups. Once `/poteto-mode` is loaded in the conversation, it remains in context for subsequent turns until you switch tasks with `new task` or opt out.
 

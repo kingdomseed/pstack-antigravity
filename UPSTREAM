@@ -1,7 +1,7 @@
 source: https://github.com/cursor/plugins/tree/main/pstack
-version: 0.15.36
+version: 0.15.48
 cloned_from: https://github.com/cursor/plugins.git
-commit: c742dd61706fbacc1b95f1a20b7b988cf096ce6c
+commit: 9e278fe4d41f5e6e0c93a9df4b0de5a1d9ef6d4a
 license: MIT (Lauren Tan)
-Antigravity native conversion: 0.15.36, November 12, 2026.
+Antigravity native conversion: 0.15.48, November 25, 2026.
 Plugin: pstack.
