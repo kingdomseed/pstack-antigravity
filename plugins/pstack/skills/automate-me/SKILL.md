@@ -14,7 +14,7 @@ This skill orchestrates an inline mining pass (see step 1), Antigravity `SKILL.m
 
 ### 0. Check for an existing skill
 
-Look recursively for `.agents/skills/**/*-mode/SKILL.md` and `~/.gemini/config/skills/*-mode/SKILL.md` matching the user's handle. Mode skills can live in a personal category directory (`.agents/skills/<handle>/`), not only at the top level. If one exists, confirm intent with `ask_question` (unless they already said "update my skill" or similar):
+Look recursively for `.agents/skills/**/*-mode/SKILL.md`, `~/.gemini/config/skills/*-mode/SKILL.md`, and `~/.agents/skills/*-mode/SKILL.md` matching the user's handle. Mode skills can live in a personal category directory (`.agents/skills/<handle>/`), not only at the top level. If one exists, confirm intent with `ask_question` (unless they already said "update my skill" or similar):
 
 - Update the existing skill (default for repeat runs)
 - Start fresh (rare, ask why before doing it)
@@ -66,7 +66,7 @@ The **poteto-mode** skill shows the shape. Read it for granularity. Don't copy i
 
 Author the Antigravity skill file. Placement:
 
-- Path: preserve an existing mode skill's category. For a new mode, use `.agents/skills/<handle>-mode/SKILL.md` in the project (or `~/.gemini/config/skills/<handle>-mode/SKILL.md` if the user prefers a personal skill).
+- Path: preserve an existing mode skill's category. For a new mode, use `.agents/skills/<handle>-mode/SKILL.md` in the project (or `~/.gemini/config/skills/<handle>-mode/SKILL.md` / `~/.agents/skills/<handle>-mode/SKILL.md` if the user prefers a personal skill).
 - Handle: the user's first name or chosen identifier.
 - Frontmatter `description`: trigger on their name + `/<handle>-mode` + "work in their style", not on generic keywords like "write code" or "review PR".
 - Frontmatter formatting: keep `description` as one YAML scalar. Quote it or use `description: >-` with indented continuation lines when punctuation or wrapping requires it.

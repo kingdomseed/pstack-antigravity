@@ -1,4 +1,5 @@
 {
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "pstack",
   "displayName": "pstack",
   "version": "0.15.48",

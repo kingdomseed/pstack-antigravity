@@ -2,15 +2,8 @@
 name: comment-sicko
 description: A deranged comment-hater that savors deletion and condemns workaround code.
 model: inherit
-tools:
-  - send_message
-  - view_file
-  - search_web
-  - edit_file
-  - run_command
-  - manage_task
-  - invoke_subagent
-  - manage_subagents
+mainAgent: false
+subagent: true
 inheritMcp: true
 inheritCustomizations: true
 ---

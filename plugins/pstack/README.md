@@ -25,7 +25,7 @@ agy plugin validate /Users/jasonholt/repos/personal/pstack/pstack-antigravity/pl
 agy plugin install /Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack
 ```
 
-see the [antigravity runtime and model guide](./docs/guide/00-antigravity.md) for how native `swarm` and `invoke_subagent`, 4-tier model selection (`claude-opus-5-5-high`, `gemini-4-neon-xhigh` / `-high`, `gemini-4-carbon-high`, `gemini-4-hydrogen-high` / `gemini-3.8-flash-high`), live quota fallback, worktree isolation (`workspace: "branch" | "share"`), and timers (`schedule`) work.
+see the [antigravity runtime and model guide](./docs/guide/00-antigravity.md) for how native `swarm`, `run_workflow`, `invoke_subagent`, `update_steps`, 4-tier model selection (`claude-opus-5-5-high`, `gemini-4-neon-xhigh` / `-high`, `gemini-4-carbon-high`, `gemini-4-hydrogen-high` / `gemini-3.8-flash-high`), live quota fallback, worktree isolation (`workspace: "branch" | "share"`), and timers (`schedule`) work.
 
 ## get started
 
@@ -256,8 +256,8 @@ twenty-four short skills, one principle each. `poteto-mode` indexes them inline 
 ## bundled & built-in helpers
 
 - `/deslop` ([skills/deslop/SKILL.md](./skills/deslop/SKILL.md)) is bundled directly in this Antigravity package.
-- Browser/Electron/web UI verification uses Antigravity's built-in `browser` subagent (`TypeName: "browser"`), `chrome-devtools` / `browse` MCP, `chrome_*` / `preview_*`, and project-local `.agents/skills/verify-<app>/` skills. Native desktop apps use `cua-driver`; CLI and TUI verification uses `run_command` and `manage_task`.
-- Timers and loops use Antigravity's native `schedule` tool and `/automation` sidecars. Inside `poteto-mode`, PR-status requests go to the [babysit playbook](./skills/poteto-mode/playbooks/babysit.md).
+- Browser/Electron/web UI verification uses Antigravity's built-in `browser` subagent (`TypeName: "browser"`), `chrome-devtools` / `browse` MCP, and project-local `.agents/skills/verify-<app>/` skills. Native desktop apps use `cua-driver`; CLI and TUI verification uses `run_command` and `manage_task`.
+- Timers and loops use Antigravity's native `schedule` tool, `run_command` (`IsDaemon` / `NotificationTimeoutSeconds`), and `/automation` sidecars (`sidecar.json`). Inside `poteto-mode`, PR-status requests go to the [babysit playbook](./skills/poteto-mode/playbooks/babysit.md).
 
 ## why are there no planning skills?
 

@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 ## Start
 
-Track one checklist entry per phase in `<appDataDir>/brain/<conversation-id>/task.md` before launching anything.
+Track one checklist entry per phase with `update_steps` before launching anything.
 
 1. Frame
 2. Fan out
@@ -24,7 +24,7 @@ Track one checklist entry per phase in `<appDataDir>/brain/<conversation-id>/tas
 
 ## Phase B: Fan out
 
-Launch all N workers concurrently using Antigravity's native `swarm` tool (`swarm(action: "add", name: "worker", model: "<slug>", workspace: "share", tasks: [...], brief: ...)` for sharded homogeneous slices, or parallel `swarm(action: "add", name: "<arm>", model: "<slug>", workspace: "share", brief: ...)` calls for per-arm models; or N parallel `invoke_subagent` calls in the same assistant turn with `TypeName: "poteto-agent"` or `"self"` when `Model: "inherit" | "pro" | "flash"` suffices). Use `workspace: "inherit"` only when the worker is strictly read-only or must inspect unbranched local state.
+Launch all N workers concurrently using Antigravity's native `swarm` tool (`swarm(action: "add", name: "worker", model: "<slug>", workspace: "share", tasks: [...], brief: ...)` for sharded homogeneous slices, or parallel `swarm(action: "add", name: "<arm>", model: "<slug>", workspace: "share", brief: ...)` calls for per-arm models; or N parallel `invoke_subagent` calls in the same assistant turn with `TypeName: "poteto-agent"` or `"self"` when `Model: "inherit" | "pro" | "flash"` suffices). Homogeneous structured-JSON fan-outs without cross-vendor model pinning can also run via `run_workflow` (`parallel()` + `agent(..., schema=...)`), and `swarm(action: "model", name: "<worker>", model: "<slug>")` switches a waiting worker on quota exhaustion while keeping its context. Use `workspace: "inherit"` only when the worker is strictly read-only or must inspect unbranched local state.
 
 When a worker must start from a non-default pushed branch, instruct the worker to `git fetch origin <branch> && git checkout <branch>` inside its isolated workspace (`workspace: "share"` or `"branch"`).
 

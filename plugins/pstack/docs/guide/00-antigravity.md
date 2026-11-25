@@ -23,31 +23,39 @@ Pass `--reset-models` to `install-antigravity.sh` when you want to overwrite exi
 - Removes any stale duplicate `pstack` skill folders from `~/.gemini/config/skills/` so pstack slash commands never appear twice in Antigravity, while preserving standalone non-pstack skills (`cua-driver`, `instabox*`).
 - Seeds `~/.gemini/config/rules/pstack-models.md`, `~/.gemini/pstack-models.md`, and `~/.t3/userdata/providers/antigravity/*/config/rules/pstack-models.md` from `scripts/pstack-models.default.md`.
 
-## Multi-agent delegation: `swarm` and `invoke_subagent`
+## Multi-agent delegation: `swarm`, `run_workflow`, and `invoke_subagent`
 
-Antigravity provides two native multi-agent surfaces. Use the one that matches the job:
+Antigravity provides three native multi-agent surfaces. Use the one that matches the job:
 
-### 1. Native `swarm` (exact model slug pinning + live quota inspection)
+### 1. Native `swarm` (shared board + exact model slug pinning + live quota inspection)
 
-Use `swarm` whenever a role or panel requires pinning an exact model slug across vendors (`claude-opus-5-5-high`, `gemini-4-neon-xhigh`, `gemini-4-neon-high`, `gemini-4-carbon-high`, `gemini-4-hydrogen-high` / `gemini-3.8-flash-high`):
+Use `swarm` whenever a role or panel requires pinning an exact model slug across vendors (`claude-opus-5-5-high`, `gemini-4-neon-xhigh`, `gemini-4-neon-high`, `gemini-4-carbon-high`, `gemini-4-hydrogen-high` / `gemini-3.8-flash-high`), or when workers need to coordinate on a shared board:
 
 - `swarm(action: "models", all: true)` returns every accepted model slug plus live `quotas` (`remaining` percentage and `reset` timestamp) per model family. Call it once before multi-model fan-out (`/arena`, `/interrogate`, `/swarm`).
-- `swarm(action: "add", name: "<worker>", model: "<slug>", workspace: "share" | "branch" | "inherit", brief: "...")` spawns a worker pinned to `<slug>` (`tasks: [...]` or `n: <k>` spawns `<name>-1`..`<name>-<k>`). Workers start fresh and see only the public board, so paste full briefs, open with `Read <path>/worker.md before anything else.`, and tell code-writing workers to read `poteto-mode/SKILL.md` first.
+- `swarm(action: "add", name: "<worker>", model: "<slug>", workspace: "share" | "branch" | "inherit", brief: "...")` spawns a worker pinned to `<slug>` (`tasks: [...]` or `n: <k>` spawns `<name>-1`..`<name>-<k>`; pass `fork: "<member>"` when a worker needs another member's conversation history). Workers start fresh and see only the public board by default, so paste full briefs, open with `Read <path>/worker.md before anything else.`, and tell code-writing workers to read `poteto-mode/SKILL.md` first.
+- Board messaging tools (`post_message`, `read_board`, `swarm_wait`) appear on the turn *after* the first `swarm(action: "add")` call.
 - `swarm(action: "model", name: "<worker>", model: "<slug>")` switches a `waiting` worker on quota exhaustion without losing its conversation.
 - `swarm(action: "kill", name: "<worker>")` permanently ends a worker and deletes its `share` or `branch` workspace. Land or cherry-pick a worker's commits before killing it, then kill finished workers when the round closes.
 
-### 2. `invoke_subagent` (custom subagent prompts + built-in specialist agents)
+### 2. `run_workflow` (Dynamic Workflows — Python orchestration + JSON schemas)
 
-Use `invoke_subagent` (`Model: "inherit" | "pro" | "flash" | "flash_lite"`, `Workspace: "inherit" | "branch" | "share"`) when the worker's system prompt or specialist toolset matters and `Model` covers the target tier:
+Use `run_workflow` (`/run-workflow`, bundled Python with no external install required) for structured multi-item fan-outs (per-file audits, coverage sweeps, transcript slicing, evals) or staged multi-step pipelines where deterministic control flow, JSON-schema outputs, and keeping bulk out of the main thread matter more than exact cross-vendor model pinning:
 
-- `TypeName: "poteto-agent"`: code-writing and helper delegates inside `/poteto-mode` playbooks. Configured in `agents/poteto-agent.md` (`model: inherit`) with full write, command, task, subagent, `swarm`, and MCP grants (`inheritMcp: true`, `inheritCustomizations: true`). Reads `poteto-mode/SKILL.md` in full before any work.
-- `TypeName: "comment-sicko"`: comment-deletion and `MUST KILL` flagger used by `/no-comments`, configured with `edit_file`, `run_command`, and MCP inheritance.
+- Primitives include `parallel()`, `pipeline()`, `phase()`, `agent(prompt, schema=..., role=..., type_name=..., workspace="inherit" | "branch" | "share", model="inherit" | "flash_lite" | "flash" | "pro")`, `call_tool()`, and `trajectory(...)` for transcript inspection.
+- Workflow agents keep their own conversations and return typed JSON matching `schema`; bulk file reads and logs never enter the main chat context.
+
+### 3. `invoke_subagent` (custom subagent prompts + built-in specialist agents)
+
+Use `invoke_subagent` (`Model: "inherit" | "pro" | "flash" | "flash_lite"`, `Workspace: "inherit" | "branch" | "share"`) when a single or small set of delegates needs a custom system prompt or specialist toolset and `Model` covers the target tier:
+
+- `TypeName: "poteto-agent"`: code-writing and helper delegates inside `/poteto-mode` playbooks. Configured in `agents/poteto-agent.md` (`model: inherit`, `mainAgent: false`, `subagent: true`) with `inheritMcp: true` and `inheritCustomizations: true` (omits `tools:` so it inherits the host's full built-in toolset across App, CLI, and IDE without unmapped-tool hangs). Reads `poteto-mode/SKILL.md` in full before any work.
+- `TypeName: "comment-sicko"`: comment-deletion and `MUST KILL` flagger used by `/no-comments`, configured with `mainAgent: false`, `subagent: true`, and full MCP/customization inheritance.
 - `TypeName: "research"`: built-in read-only subagent for fast codebase exploration (`/how`). Note that `research` runs without MCP or network access.
 - `TypeName: "self"`: built-in subagent inheriting the parent agent's full configuration and MCP access. Use `TypeName: "self"` (with read-only prompt instructions) when a read-only investigator needs MCP tools (`/recall`).
-- `TypeName: "browser"`: built-in webview browser agent (`Model: "flash"` by default) for live web UI verification alongside `chrome-devtools` / `browse` MCP and `cua-driver`.
-- Parallelism and wakeup: launch parallel subagents via multiple `invoke_subagent` tool calls in the same assistant turn. Both `swarm` and `invoke_subagent` wake the parent turn reactively on completion; never poll in a loop.
+- `TypeName: "browser"`: built-in webview browser agent (`Model: "flash"` by default) supporting parallel tabs and native `.mp4` screen recordings for live web UI verification alongside `chrome-devtools` / `browse` MCP and `cua-driver`.
+- Parallelism and wakeup: launch parallel subagents via multiple `invoke_subagent` tool calls in the same assistant turn. `swarm`, `run_workflow`, and `invoke_subagent` all wake the parent turn reactively on completion; never poll in a loop.
 
-### 3. Headless CLI and T3 Code fallbacks
+### 4. Headless CLI and T3 Code fallbacks
 
 When running a one-shot cross-family invocation outside `swarm`, always pass `--model` before `-p` or use `-p='...'` (`-p` takes the next token as its prompt):
 
@@ -80,10 +88,11 @@ Antigravity pstack routes work across four allowed frontier model tiers across t
 
 Run `/setup-pstack` to customize `~/.gemini/config/rules/pstack-models.md` and `~/.gemini/pstack-models.md`.
 
-## Timers, artifacts, MCP schemas, and verification
+## Runtime primitives, continuity, and verification
 
-- **Task checklist:** `/poteto-mode` writes playbook checklists to `<appDataDir>/brain/<conversation-id>/task.md` (`write_file` / `edit_file` with `ArtifactMetadata`) and decision trails to `decisions.tsv` or `<appDataDir>/brain/<conversation-id>/decisions.tsv`.
-- **Timers and schedules:** In-session loops and heartbeats use `schedule` (`DurationSeconds` with `TimerCondition` for one-shot wakeups; 5-field `CronExpression` with `IsDaemon: false | true` for recurring checks). Persistent background automations outside a chat session use `/automation` (`~/.gemini/automations/<name>/automation.toml`).
-- **MCP schemas:** Lazy MCP server tool schemas live at `<appDataDir>/mcp/<serverName>/<toolName>.json` (for example `~/.gemini/antigravity/mcp/<serverName>/`).
-- **Session transcripts:** `<appDataDir>/brain/<conversation-id>/.system_generated/logs/transcript.jsonl` (and `transcript_full.jsonl` when `truncated_fields` is present) plus `~/.gemini/antigravity-cli/conversations/`.
-- **Live verification:** Web UIs use `.agents/skills/verify-<app>/`, `invoke_subagent` (`TypeName: "browser"`), `chrome-devtools` / `browse` MCP, or `chrome_*` / `preview_*`. Native desktop apps use `cua-driver` or `.agents/skills/verify-<app>/`. Mobile apps use Patrol / Marionette / simulator skills. CLIs and TUIs use `run_command` and `manage_task`.
+- **Live checklist and status:** Default to `update_steps` (live checklist rendered above the prompt in CLI and in the App) and `update_focus` for in-session progress; write `<appDataDir>/brain/<conversation-id>/task.md` (`write_file` / `edit_file` with `ArtifactMetadata`) only when a persistent multi-session checklist artifact is needed. Decision trails stay at `decisions.tsv` or `<appDataDir>/brain/<conversation-id>/decisions.tsv`.
+- **Timers, daemons, and scheduled sidecars:** In-session waits use `schedule` (`DurationSeconds` with `TimerCondition` for one-shot wakeups; 5-field `CronExpression` with `IsDaemon: false | true` for recurring checks). Long-running dev servers use `run_command` with `IsDaemon: true`, and long finite commands/watchers use `NotificationTimeoutSeconds` instead of polling loops. Persistent recurring automations outside a chat session use `/automation` sidecars (`~/.gemini/config/sidecars/<slug>/sidecar.json` with `"builtin": "schedule"`, enabled in `~/.gemini/config/config.json`, and managed at `sidecar://dashboard`).
+- **Remote execution and continuity:** Local runs keep unlimited local conversation history and auto-resume after App restarts. Use **Remote Control** (`agy remote-control`) to monitor and steer local checkouts from phone or browser; **SSH Host projects** (`(SSH: <host>)`) to run the App against a remote Linux machine; and **Remote Agents** (`agy --remote-agent` or New Remote Project on `antigravity.google.com`) for Google-managed cloud runs that keep working while your laptop sleeps.
+- **Conversations API, transcripts, and MCP schemas:** When `$ANTIGRAVITY_LS_ADDRESS` is set, query `http://$ANTIGRAVITY_LS_ADDRESS/product.v1.ConversationService/{ListConversations,GetConversation,CreateConversation,UpdateConversation}` for programmatic chat/pinned state instead of scanning the sidebar manually. Transcripts live at `<appDataDir>/brain/<conversation-id>/.system_generated/logs/transcript.jsonl` (and `transcript_full.jsonl` when `truncated_fields` is present) plus `~/.gemini/antigravity-cli/conversations/`. Lazy MCP tool schemas live at `<appDataDir>/mcp/<serverName>/<toolName>.json`.
+- **Live verification:** Web UIs use `.agents/skills/verify-<app>/`, `invoke_subagent` (`TypeName: "browser"`, `Model: "flash"`, parallel tabs + native `.mp4` screen recording), or `chrome-devtools` / `browse` MCP. Native desktop apps use `cua-driver` or `.agents/skills/verify-<app>/`. Mobile apps use `flutter_dart-mcp-server` / Patrol / Marionette / simulator skills. CLIs and TUIs use `run_command` (`IsDaemon` / `NotificationTimeoutSeconds`) and `manage_task`.
+- **Built-in commands, hooks, and skill paths:** pstack composes directly with Antigravity built-ins (`/plan`, `/compact`, `/btw` parallel side-questions, `/diff` and the VCS Review pane, GitHub PR pills, `/fork`, `/resume`, `/run-workflow`, `/automation`, and `hooks.json` lifecycle hooks). Both `~/.gemini/config/skills/` and `~/.agents/skills/` are discovered globally alongside plugin skills.

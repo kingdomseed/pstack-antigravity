@@ -45,9 +45,9 @@ If cost is the worry, say where the tokens go and how to spend fewer. pstack spe
 
 ## Start a task with `/poteto-mode`
 
-`/poteto-mode` matches the task to a playbook, copies the playbook's steps into the todo list, and runs the other skills as the steps need them. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](../../docs/guide/02-poteto-mode.md) has examples.
+`/poteto-mode` matches the task to a playbook, copies the playbook's steps into `update_steps`, and runs the other skills as the steps need them. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](../../docs/guide/02-poteto-mode.md) has examples.
 
-In Antigravity, invoking `/poteto-mode` loads the skill into the conversation context, where it stays for subsequent turns until you switch tasks or opt out. Mid-chat, "new task" makes the mode match a fresh playbook. `/poteto-mode` uses native `swarm` (when pinning exact cross-vendor slugs like `claude-opus-5-5-high`, `gemini-4-neon-xhigh`, `gemini-4-carbon-high`, or `gemini-4-hydrogen-high`) and `invoke_subagent` with `TypeName: "poteto-agent"` for the delegates its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `TypeName: "poteto-agent"` or pass `poteto-mode` in a `swarm` worker's brief.
+In Antigravity, invoking `/poteto-mode` loads the skill into the conversation context, where it stays for subsequent turns until you switch tasks or opt out. Mid-chat, "new task" makes the mode match a fresh playbook. `/poteto-mode` uses native `swarm` (when pinning exact cross-vendor slugs like `claude-opus-5-5-high`, `gemini-4-neon-xhigh`, `gemini-4-carbon-high`, or `gemini-4-hydrogen-high`), `run_workflow` (when Python-scripted `parallel`/`pipeline` control flow returns structured JSON outputs), and `invoke_subagent` with `TypeName: "poteto-agent"` for the delegates its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `TypeName: "poteto-agent"` or pass `poteto-mode` in a `swarm` worker's brief.
 
 ## Pick a skill
 
@@ -105,7 +105,7 @@ Close calls:
 Built-ins and bundled helpers:
 
 - `/deslop` ships directly in this Antigravity pstack package.
-- `swarm` (multi-model worker board with exact model pinning and live quota visibility), `invoke_subagent` (`poteto-agent`, `comment-sicko`, `research`, `self`, `browser`), `schedule` (timers and cron), `/automation` (persistent sidecars), `cua-driver` (native desktop GUI automation), `chrome_*` / `preview_*` (browser automation), and `run_command` / `manage_task` (terminal control) are Antigravity built-ins or workspace skills.
+- `swarm` (multi-model worker board with exact model pinning and live quota visibility), `run_workflow` (Python `parallel`/`pipeline` orchestration with JSON schemas), `invoke_subagent` (`poteto-agent`, `comment-sicko`, `research`, `self`, `browser`), `update_steps` / `update_focus` (live checklist and status), `schedule` (timers and cron), `/automation` (persistent `sidecar.json` background tasks), `cua-driver` (native desktop GUI automation), `chrome-devtools` / `browse` MCP (browser automation), and `run_command` (`IsDaemon` / `NotificationTimeoutSeconds`) / `manage_task` (terminal control) are Antigravity built-ins or workspace skills. Built-in commands such as `/plan`, `/btw`, `/diff`, `/compact`, `/fork`, and `/resume` work alongside pstack.
 - pstack has no `/orchestrate` skill. If the slash menu shows `/orchestrate`, another plugin provides it.
 
 ## Playbooks and principles

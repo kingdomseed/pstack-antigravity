@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Arena
 
-Track one checklist entry per phase (Frame, Fan out, Cross-judge, Pick, Graft, Verify) in `<appDataDir>/brain/<conversation-id>/task.md` before launching anything.
+Track one checklist entry per phase (Frame, Fan out, Cross-judge, Pick, Graft, Verify) with `update_steps` (and optionally `<appDataDir>/brain/<conversation-id>/task.md` for persistent handoff) before launching anything.
 
 ## Phase A: Frame
 

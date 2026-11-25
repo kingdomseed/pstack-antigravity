@@ -14,4 +14,4 @@ Keep a finding only if it will still hold in six months, would change what a fut
 
 Present Accepted (problem, proposal, skill), Rejected (reason) and Backlog, and wait for approval before editing any skill.
 
-Never edit a skill directly under `~/.gemini/config/plugins/`. Before approval, show its destination, `.agents/skills/<skill>/` or `~/.gemini/config/skills/<skill>/` (or the source plugin repository when explicitly maintaining pstack). After approval, copy the skill folder there and edit the copy. Run `agy plugin validate --strict` if applicable, and never open a PR or push without approval.
+Never edit a skill directly under `~/.gemini/config/plugins/`. Before approval, show its destination, `.agents/skills/<skill>/`, `~/.gemini/config/skills/<skill>/`, or `~/.agents/skills/<skill>/` (or the source plugin repository when explicitly maintaining pstack). After approval, copy the skill folder there and edit the copy. Run `agy plugin validate --strict` if applicable, and never open a PR or push without approval.

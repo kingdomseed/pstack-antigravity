@@ -69,11 +69,13 @@ elif raw=$(gh pr list --author "@me" --state all --limit 1000 \
 fi
 [ -s "$prs" ] || echo "[]" > "$prs"
 
-# Transcripts dirs: Antigravity brain logs and CLI conversations.
-transcript_dirs=()
-for d in "$HOME/.gemini/antigravity/brain" "$HOME/.gemini/antigravity-cli/conversations" "$HOME/.gemini/antigravity/conversations" "$HOME/.t3/userdata/providers/antigravity"; do
-	[ -d "$d" ] && transcript_dirs+=("$d")
-done
+# Compact transcript files: Antigravity brain logs and T3 Antigravity sessions.
+# Collected once before the loop so large binary/media artifacts in brain/ and
+# conversations/ (.pb, .db) are never scanned.
+transcript_list=$(mktemp)
+for d in "$HOME/.gemini/antigravity/brain" "$HOME/.gemini/antigravity-cli/brain" "$HOME/.t3/userdata/providers/antigravity"; do
+	[ -d "$d" ] && find "$d" -maxdepth 5 -name 'transcript.jsonl' -print0 2>/dev/null
+done > "$transcript_list"
 now=$(date +%s)
 
 echo "# base: $base"
@@ -113,9 +115,15 @@ git worktree list --porcelain | awk '/^worktree /{print $2}' | while read -r wt;
 	# Most recent chat whose transcript operated in this worktree. Match path
 	# followed by "/" or a quote so glint-482 does not match glint-482-r37.
 	last="-"; last_ts=0
-	if [ ${#transcript_dirs[@]} -gt 0 ]; then
-		f=$(rg -l -e "${wt}/" -e "${wt}\"" "${transcript_dirs[@]}" 2>/dev/null \
-			| xargs stat "${stat_fmt[@]}" 2>/dev/null | sort -rn | head -1)
+	if [ -s "$transcript_list" ]; then
+		if command -v rg >/dev/null 2>&1; then
+			matches=$(xargs -0 rg -lF -e "${wt}/" -e "${wt}\"" < "$transcript_list" 2>/dev/null)
+		else
+			matches=$(xargs -0 grep -lF -e "${wt}/" -e "${wt}\"" < "$transcript_list" 2>/dev/null)
+		fi
+		f=$(printf '%s\n' "$matches" \
+			| while IFS= read -r path; do [ -n "$path" ] && stat "${stat_fmt[@]}" "$path" 2>/dev/null; done \
+			| sort -rn | head -1)
 		if [ -n "$f" ]; then last_ts=$(echo "$f" | awk '{print $1}')
 			last=$(fmt_day "$last_ts" 2>/dev/null); fi
 	fi
@@ -133,4 +141,4 @@ git worktree list --porcelain | awk '/^worktree /{print $2}' | while read -r wt;
 		"$size" "$age" "$merged" "$dirty" "$remote" "$pr" "$last" "$bucket" "$wt"
 done | sort -t$'\t' -k1,1 -rh
 
-rm -f "$prs"
+rm -f "$prs" "$transcript_list"
