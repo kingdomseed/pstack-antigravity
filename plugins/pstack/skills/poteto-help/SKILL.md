@@ -35,7 +35,7 @@ When the model rule is missing and it matters, ask whether the user wants to pic
 
 ## Get set up
 
-1. Install with `agy plugin install /Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack` (or `plugins/pstack/scripts/install-antigravity.sh`).
+1. Install with `agy plugin install <path-to-pstack-antigravity>/plugins/pstack` (or `plugins/pstack/scripts/install-antigravity.sh`).
 2. Run [`/setup-pstack`](../setup-pstack/SKILL.md). It asks for a reasoning budget, maps a model to each role, and writes `~/.gemini/config/rules/pstack-models.md`. The rule applies to new chats. Then it offers once each to generate a verification skill and a formal verification skill for the project, unless the project already has one.
 3. Start a real task with `/poteto-mode`, a goal, and a check that can pass or fail.
 

@@ -8,7 +8,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-AGY_BIN="${AGY_BIN:-$(command -v agy || echo /Users/jasonholt/.local/bin/agy)}"
+AGY_BIN="${AGY_BIN:-$(command -v agy || echo "$HOME/.local/bin/agy")}"
 
 write_model_rule() {
   local dst="$1"

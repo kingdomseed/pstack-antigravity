@@ -4,18 +4,18 @@ This package is a native Antigravity conversion of Lauren Tan's [pstack](https:/
 
 ## Install and validate
 
-Validate and install the plugin from `/Users/jasonholt/repos/personal/pstack/pstack-antigravity`:
+Validate and install the plugin from a local checkout root (or directly from `https://github.com/kingdomseed/pstack-antigravity`):
 
 ```sh
-/Users/jasonholt/.local/bin/agy plugin validate /Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack --strict
-/Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh
-/Users/jasonholt/.local/bin/agy plugin list
+agy plugin validate ./plugins/pstack --strict
+./plugins/pstack/scripts/install-antigravity.sh
+agy plugin list
 ```
 
 Pass `--reset-models` to `install-antigravity.sh` when you want to overwrite existing `pstack-models.md` rules with the latest defaults:
 
 ```sh
-/Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh --reset-models
+./plugins/pstack/scripts/install-antigravity.sh --reset-models
 ```
 
 `install-antigravity.sh`:
@@ -94,5 +94,15 @@ Run `/setup-pstack` to customize `~/.gemini/config/rules/pstack-models.md` and `
 - **Timers, daemons, and scheduled sidecars:** In-session waits use `schedule` (`DurationSeconds` with `TimerCondition` for one-shot wakeups; 5-field `CronExpression` with `IsDaemon: false | true` for recurring checks). Long-running dev servers use `run_command` with `IsDaemon: true`, and long finite commands/watchers use `NotificationTimeoutSeconds` instead of polling loops. Persistent recurring automations outside a chat session use `/automation` sidecars (`~/.gemini/config/sidecars/<slug>/sidecar.json` with `"builtin": "schedule"`, enabled in `~/.gemini/config/config.json`, and managed at `sidecar://dashboard`).
 - **Remote execution and continuity:** Local runs keep unlimited local conversation history and auto-resume after App restarts. Use **Remote Control** (`agy remote-control`) to monitor and steer local checkouts from phone or browser; **SSH Host projects** (`(SSH: <host>)`) to run the App against a remote Linux machine; and **Remote Agents** (`agy --remote-agent` or New Remote Project on `antigravity.google.com`) for Google-managed cloud runs that keep working while your laptop sleeps.
 - **Conversations API, transcripts, and MCP schemas:** When `$ANTIGRAVITY_LS_ADDRESS` is set, query `http://$ANTIGRAVITY_LS_ADDRESS/product.v1.ConversationService/{ListConversations,GetConversation,CreateConversation,UpdateConversation}` for programmatic chat/pinned state instead of scanning the sidebar manually. Transcripts live at `<appDataDir>/brain/<conversation-id>/.system_generated/logs/transcript.jsonl` (and `transcript_full.jsonl` when `truncated_fields` is present) plus `~/.gemini/antigravity-cli/conversations/`. Lazy MCP tool schemas live at `<appDataDir>/mcp/<serverName>/<toolName>.json`.
-- **Live verification:** Web UIs use `.agents/skills/verify-<app>/`, `invoke_subagent` (`TypeName: "browser"`, `Model: "flash"`, parallel tabs + native `.mp4` screen recording), or `chrome-devtools` / `browse` MCP. Native desktop apps use `cua-driver` or `.agents/skills/verify-<app>/`. Mobile apps use `flutter_dart-mcp-server` / Patrol / Marionette / simulator skills. CLIs and TUIs use `run_command` (`IsDaemon` / `NotificationTimeoutSeconds`) and `manage_task`.
+- **Live verification:** Match the verification surface to the task using the browser/DevTools/computer-use matrix below, `.agents/skills/verify-<app>/`, or `run_command` (`IsDaemon` / `NotificationTimeoutSeconds`) + `manage_task` for CLIs/TUIs.
 - **Built-in commands, hooks, and skill paths:** pstack composes directly with Antigravity built-ins (`/plan`, `/compact`, `/btw` parallel side-questions, `/diff` and the VCS Review pane, GitHub PR pills, `/fork`, `/resume`, `/run-workflow`, `/automation`, and `hooks.json` lifecycle hooks). Both `~/.gemini/config/skills/` and `~/.agents/skills/` are discovered globally alongside plugin skills.
+
+## Browser, DevTools, and computer-use surfaces
+
+| Surface | Best for | Strengths and constraints |
+| --- | --- | --- |
+| **Built-in `browser` subagent** (`TypeName: "browser"`, `Model: "flash"`, App `v2.30.0+` personal accounts) | Fast UI flows and multi-page visual sweeps | Zero Chrome setup; parallel isolated tabs; live cursor and one-click **Stop** takeover; persistent per-account cookie profile with sign-in handoff; `localhost:port` isolation; console + sanitized network + screenshots/snapshots. Does not run arbitrary `evaluate_script` or DevTools profiling. |
+| **`chrome-devtools` MCP** (`chrome-devtools-plugin` / `chrome-devtools-mcp`, also backing CLI/IDE `/browser` via `chrome://inspect/#remote-debugging`) | Web `Perf issue`, `Trace forensics`, `Runtime forensics`, auth & extension debugging | Performance traces, LCP/Core Web Vitals, heap snapshots (`--memoryDebugging`), extension debugging (`--categoryExtensions`), Lighthouse audits, `get_css_styles`, `evaluate_script`, MP4 session recordings (CLI `1.5.9+`), logpoints (`set_logpoints`), virtual WebAuthn authenticators (`configure_webauthn`), and page-scoped network mocks. |
+| **`browse` MCP** (Chromium-family extension bridge) | Signed-in browser tabs and 2FA flows | Playwright-style `execute` scripts (`page`, `snapshot()`, `ref()`, `handoff()`, `tabs`) reusing the user's running browser session. |
+| **`cua-driver` & mobile tooling** (`flutter_dart-mcp-server`, Patrol, simulators) | Native desktop and mobile UIs | `cua-driver` drives desktop accessibility trees plus screenshots and pixel actions; Flutter/mobile tooling handles widget inspection and simulator runs. |
+| **Gemini Computer Use API & WebMCP** | Custom visual test harnesses and WebMCP-enabled apps | In standalone `google-genai` harnesses, Gemini 4 `computer_use` (`environment: "browser" \| "mobile" \| "desktop"`) outputs structured action `intent` fields, safety policies, and prompt-injection checks over a Playwright/VM executor. When a page exposes WebMCP (`document.modelContext`), prefer structured client-side tools over blind DOM clicking. |

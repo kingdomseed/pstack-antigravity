@@ -14,15 +14,17 @@ fork it. improve it. make it yours. PRs are welcome!
 
 ## install
 
+From the repository root:
+
 ```bash
-/Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh
+./plugins/pstack/scripts/install-antigravity.sh
 ```
 
 or directly with the Antigravity CLI:
 
 ```bash
-agy plugin validate /Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack --strict
-agy plugin install /Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack
+agy plugin validate ./plugins/pstack --strict
+agy plugin install ./plugins/pstack
 ```
 
 see the [antigravity runtime and model guide](./docs/guide/00-antigravity.md) for how native `swarm`, `run_workflow`, `invoke_subagent`, `update_steps`, 4-tier model selection (`claude-opus-5-5-high`, `gemini-4-neon-xhigh` / `-high`, `gemini-4-carbon-high`, `gemini-4-hydrogen-high` / `gemini-3.8-flash-high`), live quota fallback, worktree isolation (`workspace: "branch" | "share"`), and timers (`schedule`) work.

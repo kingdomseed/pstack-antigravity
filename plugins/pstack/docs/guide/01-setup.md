@@ -4,16 +4,16 @@ In this page you install the plugin, pick which models pstack uses, and run your
 
 ## Install the plugin
 
-From your local `pstack-antigravity` checkout, run:
+From your local `pstack-antigravity` checkout root, run:
 
 ```bash
-/Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack/scripts/install-antigravity.sh
+./plugins/pstack/scripts/install-antigravity.sh
 ```
 
 Or install directly with the Antigravity CLI:
 
 ```bash
-agy plugin install /Users/jasonholt/repos/personal/pstack/pstack-antigravity/plugins/pstack
+agy plugin install ./plugins/pstack
 ```
 
 Antigravity installs the plugin into `~/.gemini/config/plugins/pstack` and registers its skills and custom subagents (`poteto-agent` and `comment-sicko`). See the [Antigravity runtime and model guide](./00-antigravity.md) for T3 Code and CLI details.
